@@ -4,16 +4,16 @@ const magicArea = document.getElementById('magic-area');
 const pointsDisplay = document.getElementById('points');
 let points = 0;
 
-// Einhorn-themed items! 
+// Einhorn-themed items - BIGGER sizes for little fingers!
 const unicornItems = [
-    { emoji: '🦄', size: 70, points: 3, name: 'unicorn' },
-    { emoji: '🌈', size: 80, points: 2, name: 'rainbow' },
-    { emoji: '☁️', size: 60, points: 1, name: 'cloud' },
-    { emoji: '⭐', size: 50, points: 1, name: 'star' },
-    { emoji: '💜', size: 45, points: 1, name: 'heart' },
-    { emoji: '🎀', size: 45, points: 1, name: 'bow' },
-    { emoji: '✨', size: 40, points: 1, name: 'sparkle' },
-    { emoji: '🌸', size: 50, points: 1, name: 'flower' },
+    { emoji: '🦄', size: 90, points: 3, name: 'unicorn' },
+    { emoji: '🌈', size: 100, points: 2, name: 'rainbow' },
+    { emoji: '☁️', size: 80, points: 1, name: 'cloud' },
+    { emoji: '⭐', size: 70, points: 1, name: 'star' },
+    { emoji: '💜', size: 65, points: 1, name: 'heart' },
+    { emoji: '🎀', size: 65, points: 1, name: 'bow' },
+    { emoji: '✨', size: 60, points: 1, name: 'sparkle' },
+    { emoji: '🌸', size: 70, points: 1, name: 'flower' },
 ];
 
 // Pastel rainbow colors for backgrounds
@@ -109,12 +109,15 @@ function createMagicItem() {
     if (item.name === 'unicorn') element.classList.add('unicorn-special');
     if (item.name === 'rainbow') element.classList.add('rainbow-special');
     
-    const baseSize = item.size + Math.random() * 20;
+    // Bigger base size for easier tapping!
+    const baseSize = item.size + Math.random() * 25;
     element.style.width = baseSize + 'px';
     element.style.height = baseSize + 'px';
     element.style.left = Math.random() * (window.innerWidth - baseSize) + 'px';
     element.style.background = magicColors[Math.floor(Math.random() * magicColors.length)];
-    element.style.animationDuration = (3.5 + Math.random() * 2) + 's';
+    
+    // SLOWER animation: 8-12 seconds instead of 3.5-5.5
+    element.style.animationDuration = (8 + Math.random() * 4) + 's';
     
     const emoji = document.createElement('span');
     emoji.className = 'emoji';
@@ -149,8 +152,8 @@ function createMagicItem() {
         points += item.points;
         pointsDisplay.textContent = points;
         
-        // Big celebration every 15 points
-        if (points % 15 === 0) {
+        // Big celebration every 10 points (easier milestone)
+        if (points % 10 === 0) {
             celebrateUnicorn();
         }
         
@@ -162,11 +165,12 @@ function createMagicItem() {
     
     magicArea.appendChild(element);
     
+    // Longer timeout for slower animation
     setTimeout(() => {
         if (!element.classList.contains('caught')) {
             element.remove();
         }
-    }, 5500);
+    }, 12000);
 }
 
 function celebrateUnicorn() {
@@ -189,10 +193,10 @@ function celebrateUnicorn() {
     }
 }
 
-// Start game
+// Start game - spawn items a bit less frequently for clearer screen
 function startGame() {
     createMagicItem();
-    setInterval(createMagicItem, 1000);
+    setInterval(createMagicItem, 1500); // Every 1.5s instead of 1s
 }
 
 window.addEventListener('load', startGame);

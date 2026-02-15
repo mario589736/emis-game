@@ -80,7 +80,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: float-up 4s linear forwards;
+    animation: float-up 8s linear forwards;
     box-shadow: 
         0 8px 32px rgba(255,255,255,0.4),
         inset 0 -5px 20px rgba(0,0,0,0.1);
@@ -92,7 +92,7 @@ body {
 }
 
 .magic-item.unicorn-special {
-    animation: float-up-wobble 4.5s linear forwards;
+    animation: float-up-wobble 9s linear forwards;
     box-shadow: 
         0 0 30px rgba(255,182,193,0.8),
         0 0 60px rgba(186,85,211,0.4);
@@ -109,16 +109,17 @@ body {
     filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2));
 }
 
+/* SLOWER float animation */
 @keyframes float-up {
     0% {
         transform: translateY(110vh) scale(0.5);
         opacity: 0;
     }
-    10% {
+    5% {
         opacity: 1;
-        transform: translateY(90vh) scale(1);
+        transform: translateY(95vh) scale(1);
     }
-    90% {
+    95% {
         opacity: 1;
     }
     100% {
@@ -132,14 +133,14 @@ body {
         transform: translateY(110vh) scale(0.5) rotate(0deg);
         opacity: 0;
     }
-    10% {
+    5% {
         opacity: 1;
-        transform: translateY(90vh) scale(1.1) rotate(0deg);
+        transform: translateY(95vh) scale(1.1) rotate(0deg);
     }
-    30% { transform: translateY(65vh) scale(1.1) rotate(10deg); }
-    50% { transform: translateY(45vh) scale(1.1) rotate(-10deg); }
-    70% { transform: translateY(25vh) scale(1.1) rotate(10deg); }
-    90% {
+    25% { transform: translateY(70vh) scale(1.1) rotate(8deg); }
+    50% { transform: translateY(45vh) scale(1.1) rotate(-8deg); }
+    75% { transform: translateY(20vh) scale(1.1) rotate(8deg); }
+    95% {
         opacity: 1;
     }
     100% {
