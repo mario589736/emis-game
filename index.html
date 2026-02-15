@@ -6,26 +6,26 @@
     <title>🦄 Emis Einhorn-Spiel 🦄</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦄</text></svg>">
-    <!-- MediaPipe Hands -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <div id="game">
         <div id="score">🦄 <span id="points">0</span></div>
+        
+        <!-- Sticker Button -->
+        <button id="sticker-btn">📖 <span id="sticker-count">0</span></button>
+        
         <div id="unicorn">🦄</div>
         <div id="magic-area"></div>
         
-        <!-- Webcam overlay -->
         <video id="webcam" autoplay playsinline></video>
         <canvas id="hand-canvas"></canvas>
         
-        <!-- Hand cursors -->
         <div id="hand-left" class="hand-cursor">🖐️</div>
         <div id="hand-right" class="hand-cursor">🖐️</div>
         
-        <!-- Start button for camera -->
-        <button id="start-camera">📷 Kamera starten für Handerkennung!</button>
+        <button id="start-camera">📷 Kamera starten!</button>
     </div>
     <script src="game.js"></script>
 </body>
