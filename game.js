@@ -29,16 +29,11 @@ let combo = 0;
 let lastCatchTime = 0;
 let stickers = new Set();
 let handX = 0, handY = 0;
-let voiceEnabled = false;
 
 // Load saved stickers
 try {
     const saved = localStorage.getItem('emiStickers');
     if (saved) stickers = new Set(JSON.parse(saved));
-} catch(e) {}
-
-try {
-    voiceEnabled = localStorage.getItem('emiVoice') === 'true';
 } catch(e) {}
 
 // === DOM ===
@@ -50,7 +45,6 @@ const video = document.getElementById('camera');
 const handCursor = document.getElementById('hand-cursor');
 const albumModal = document.getElementById('album-modal');
 const stickerGrid = document.getElementById('sticker-grid');
-const settingsModal = document.getElementById('settings-modal');
 const toast = document.getElementById('sticker-toast');
 
 // === AUDIO ===
@@ -92,33 +86,7 @@ function playBossDefeat() {
     [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, 0.12), i * 100));
 }
 
-// Voice (optional, kid-friendly)
-let synth = window.speechSynthesis;
-let kidVoice = null;
-
-function initVoice() {
-    if (!synth) return;
-    const voices = synth.getVoices();
-    // Try to find a friendly German voice
-    kidVoice = voices.find(v => v.lang.startsWith('de') && v.name.toLowerCase().includes('female')) ||
-               voices.find(v => v.lang.startsWith('de')) ||
-               voices[0];
-}
-if (synth) {
-    synth.onvoiceschanged = initVoice;
-    initVoice();
-}
-
-function speak(text) {
-    if (!voiceEnabled || !synth) return;
-    synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.voice = kidVoice;
-    u.rate = 0.85;
-    u.pitch = 1.3;
-    u.lang = 'de-DE';
-    synth.speak(u);
-}
+// Voice disabled - computer voice not kid-friendly
 
 // === SPARKLES ===
 function createSparkles(x, y, count = 5) {
@@ -232,7 +200,7 @@ function catchItem(el) {
             score += item.points;
             pointsDisplay.textContent = score;
             showPoints(x, y, item.points, true);
-            speak('Super! Boss besiegt!');
+            // Sound effect only, no voice
             setTimeout(() => el.remove(), 500);
         }
         return;
@@ -266,7 +234,7 @@ function catchItem(el) {
         stickers.add(item.emoji);
         try { localStorage.setItem('emiStickers', JSON.stringify([...stickers])); } catch(e) {}
         showStickerToast(item.emoji);
-        speak('Neuer Sticker!');
+        // Visual toast only, no voice
     }
     
     setTimeout(() => el.remove(), 300);
@@ -393,17 +361,7 @@ function showAlbum() {
     albumModal.classList.add('active');
 }
 
-// === SETTINGS ===
-function showSettings() {
-    document.getElementById('voice-enabled').checked = voiceEnabled;
-    settingsModal.classList.add('active');
-}
-
-function saveSettings() {
-    voiceEnabled = document.getElementById('voice-enabled').checked;
-    try { localStorage.setItem('emiVoice', voiceEnabled); } catch(e) {}
-    settingsModal.classList.remove('active');
-}
+// Settings removed - no voice options needed
 
 // === EVENT LISTENERS ===
 document.getElementById('touch-mode-btn').addEventListener('click', () => {
@@ -424,14 +382,10 @@ document.getElementById('camera-mode-btn').addEventListener('click', () => {
 document.getElementById('back-btn').addEventListener('click', stopGame);
 document.getElementById('album-btn').addEventListener('click', showAlbum);
 document.getElementById('close-album').addEventListener('click', () => albumModal.classList.remove('active'));
-document.getElementById('settings-btn').addEventListener('click', showSettings);
-document.getElementById('close-settings').addEventListener('click', saveSettings);
 
-// Close modals on background click
-[albumModal, settingsModal].forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('active');
-    });
+// Close modal on background click
+albumModal.addEventListener('click', (e) => {
+    if (e.target === albumModal) albumModal.classList.remove('active');
 });
 
 // Hide camera button on mobile
