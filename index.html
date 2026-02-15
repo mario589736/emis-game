@@ -3,31 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>🦄 Emis Einhorn-Spiel 🦄</title>
+    <title>🦄 Emis Einhorn-Welt 🦄</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦄</text></svg>">
 </head>
 <body>
     <div id="game">
-        <div id="score">🦄 <span id="points">0</span></div>
-        <button id="sticker-btn">📖 <span id="sticker-count">0</span></button>
-        
-        <div id="unicorn">🦄</div>
-        <div id="magic-area"></div>
-        
-        <!-- Camera elements (hidden by default) -->
-        <video id="webcam" autoplay playsinline></video>
-        <div id="hand-left" class="hand-cursor">🖐️</div>
-        <div id="hand-right" class="hand-cursor">🖐️</div>
-        
-        <!-- Mode selector (desktop only) -->
-        <div id="mode-selector">
-            <p>Wie möchtest du spielen?</p>
-            <button id="mode-touch">👆 Tippen / Klicken</button>
-            <button id="mode-camera">📷 Mit Kamera</button>
+        <!-- Mode Selection Screen -->
+        <div id="mode-screen" class="screen active">
+            <h1>🦄 Emis Einhorn-Welt</h1>
+            <p class="subtitle">Was möchtest du entdecken?</p>
+            <div class="mode-grid">
+                <button class="mode-btn" data-mode="explore">
+                    <span class="mode-icon">✨</span>
+                    <span class="mode-label">Entdecken</span>
+                </button>
+                <button class="mode-btn" data-mode="colors">
+                    <span class="mode-icon">🎨</span>
+                    <span class="mode-label">Farben</span>
+                </button>
+                <button class="mode-btn" data-mode="counting">
+                    <span class="mode-icon">🔢</span>
+                    <span class="mode-label">Zählen</span>
+                </button>
+                <button class="mode-btn" data-mode="animals">
+                    <span class="mode-icon">🐾</span>
+                    <span class="mode-label">Tiere</span>
+                </button>
+                <button class="mode-btn" data-mode="feelings">
+                    <span class="mode-icon">💜</span>
+                    <span class="mode-label">Gefühle</span>
+                </button>
+                <button class="mode-btn" data-mode="shapes">
+                    <span class="mode-icon">⭐</span>
+                    <span class="mode-label">Formen</span>
+                </button>
+            </div>
+            <button id="settings-btn" class="small-btn">⚙️ Einstellungen</button>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <h2>⚙️ Einstellungen</h2>
+                <div class="setting-row">
+                    <label>Punkte anzeigen</label>
+                    <input type="checkbox" id="show-score">
+                </div>
+                <div class="setting-row">
+                    <label>Sprache für Audio</label>
+                    <select id="language">
+                        <option value="de-DE">Deutsch</option>
+                        <option value="en-US">English</option>
+                    </select>
+                </div>
+                <button id="close-settings" class="mode-btn small">Fertig</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div id="top-bar">
+                <button id="back-btn">← Zurück</button>
+                <div id="mode-indicator"></div>
+                <div id="score" class="hidden">⭐ <span id="points">0</span></div>
+            </div>
+            
+            <div id="color-prompt" class="hidden">
+                <span>Finde alle </span>
+                <span id="target-color-name"></span>
+                <span> Sachen!</span>
+                <div id="target-color-preview"></div>
+            </div>
+            
+            <div id="unicorn">🦄</div>
+            <div id="magic-area"></div>
+            
+            <button id="memory-btn">📖 Erinnerungen</button>
+        </div>
+
+        <!-- Memory Gallery -->
+        <div id="memory-modal" class="modal">
+            <div class="modal-content gallery">
+                <h2>✨ Was du heute entdeckt hast</h2>
+                <div id="memory-grid"></div>
+                <button id="close-memory" class="mode-btn small">Schließen</button>
+            </div>
+        </div>
+
+        <!-- Sad Unicorn Helper -->
+        <div id="unicorn-helper" class="hidden">
+            <div class="helper-content">
+                <div id="helper-unicorn">🦄</div>
+                <div id="helper-mood">💜</div>
+                <div id="helper-message">Das Einhorn ist traurig...</div>
+                <div id="happiness-bar">
+                    <div id="happiness-fill"></div>
+                </div>
+                <p class="helper-hint">Streichle es sanft! 💜</p>
+            </div>
         </div>
     </div>
-    
     <script src="game.js"></script>
 </body>
 </html>
