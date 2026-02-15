@@ -1,29 +1,30 @@
 // 🦄 Emis Einhorn-Spiel 🦄
-// Works on mobile AND desktop!
 
 const magicArea = document.getElementById('magic-area');
 const pointsDisplay = document.getElementById('points');
 const webcamElement = document.getElementById('webcam');
-const startCameraBtn = document.getElementById('start-camera');
 const handLeft = document.getElementById('hand-left');
 const handRight = document.getElementById('hand-right');
+const modeSelector = document.getElementById('mode-selector');
 
 let points = 0;
 let handPositions = { left: null, right: null };
 let cameraActive = false;
+let gameStarted = false;
+
+// Detect mobile
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+    || ('ontouchstart' in window && window.innerWidth < 1024);
 
 // Combo system
 let lastCatchTime = 0;
 let comboCount = 0;
 let comboTimeout = null;
 
-// Sticker collection
+// Stickers
 let stickerCollection = {};
-try {
-    stickerCollection = JSON.parse(localStorage.getItem('emiStickers') || '{}');
-} catch(e) { stickerCollection = {}; }
+try { stickerCollection = JSON.parse(localStorage.getItem('emiStickers') || '{}'); } catch(e) {}
 
-// Items
 const unicornItems = [
     { emoji: '🍦', size: 75, points: 2, name: 'icecream', label: 'Eis' },
     { emoji: '🐶', size: 80, points: 2, name: 'dog', label: 'Hund' },
@@ -50,14 +51,11 @@ const magicColors = [
     'radial-gradient(circle, rgba(221,160,221,0.8) 0%, rgba(186,85,211,0.4) 100%)',
     'radial-gradient(circle, rgba(173,216,230,0.8) 0%, rgba(135,206,250,0.4) 100%)',
     'radial-gradient(circle, rgba(255,218,233,0.8) 0%, rgba(255,182,193,0.4) 100%)',
-    'radial-gradient(circle, rgba(230,230,250,0.8) 0%, rgba(200,162,200,0.4) 100%)',
 ];
 
-// Audio - with error handling
+// Audio
 let audioContext;
-try {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-} catch(e) { console.log('Audio not supported'); }
+try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
 
 function playMagicPop() {
     if (!audioContext) return;
@@ -65,15 +63,12 @@ function playMagicPop() {
         if (audioContext.state === 'suspended') audioContext.resume();
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        osc.type = 'sine';
+        osc.connect(gain); gain.connect(audioContext.destination);
         osc.frequency.setValueAtTime(600, audioContext.currentTime);
         osc.frequency.exponentialRampToValueAtTime(1400, audioContext.currentTime + 0.15);
         gain.gain.setValueAtTime(0.25, audioContext.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
-        osc.start(audioContext.currentTime);
-        osc.stop(audioContext.currentTime + 0.25);
+        osc.start(); osc.stop(audioContext.currentTime + 0.25);
     } catch(e) {}
 }
 
@@ -84,34 +79,31 @@ function playUnicornSound() {
         [523, 659, 784, 1047].forEach((freq, i) => {
             const osc = audioContext.createOscillator();
             const gain = audioContext.createGain();
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
-            osc.type = 'sine';
+            osc.connect(gain); gain.connect(audioContext.destination);
             osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.05);
             gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5 + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
             osc.start(audioContext.currentTime + i * 0.05);
-            osc.stop(audioContext.currentTime + 0.5 + i * 0.05);
+            osc.stop(audioContext.currentTime + 0.5);
         });
     } catch(e) {}
 }
 
-function playComboSound(comboLevel) {
+function playComboSound(level) {
     if (!audioContext) return;
     try {
         if (audioContext.state === 'suspended') audioContext.resume();
-        const baseFreq = 400 + (comboLevel * 100);
+        const baseFreq = 400 + (level * 100);
         for (let i = 0; i < 3; i++) {
             const osc = audioContext.createOscillator();
             const gain = audioContext.createGain();
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
+            osc.connect(gain); gain.connect(audioContext.destination);
             osc.type = 'square';
             osc.frequency.setValueAtTime(baseFreq + i * 150, audioContext.currentTime + i * 0.05);
             gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2 + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
             osc.start(audioContext.currentTime + i * 0.05);
-            osc.stop(audioContext.currentTime + 0.2 + i * 0.05);
+            osc.stop(audioContext.currentTime + 0.25);
         }
     } catch(e) {}
 }
@@ -122,15 +114,13 @@ function playBossHit() {
         if (audioContext.state === 'suspended') audioContext.resume();
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
+        osc.connect(gain); gain.connect(audioContext.destination);
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(200, audioContext.currentTime);
         osc.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
         gain.gain.setValueAtTime(0.3, audioContext.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        osc.start(audioContext.currentTime);
-        osc.stop(audioContext.currentTime + 0.2);
+        osc.start(); osc.stop(audioContext.currentTime + 0.2);
     } catch(e) {}
 }
 
@@ -138,18 +128,15 @@ function playBossDefeat() {
     if (!audioContext) return;
     try {
         if (audioContext.state === 'suspended') audioContext.resume();
-        const notes = [523, 659, 784, 880, 1047, 1319, 1568];
-        notes.forEach((freq, i) => {
+        [523, 659, 784, 880, 1047, 1319, 1568].forEach((freq, i) => {
             const osc = audioContext.createOscillator();
             const gain = audioContext.createGain();
-            osc.connect(gain);
-            gain.connect(audioContext.destination);
-            osc.type = 'sine';
+            osc.connect(gain); gain.connect(audioContext.destination);
             osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.08);
             gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5 + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
             osc.start(audioContext.currentTime + i * 0.08);
-            osc.stop(audioContext.currentTime + 0.5 + i * 0.08);
+            osc.stop(audioContext.currentTime + 0.6);
         });
     } catch(e) {}
 }
@@ -178,36 +165,30 @@ function createRainbowTrail(x, y) {
     setTimeout(() => trail.remove(), 800);
 }
 
-// COMBO
+// Combo
 function showCombo(x, y, combo) {
-    const comboEl = document.createElement('div');
-    comboEl.className = 'combo-popup';
-    comboEl.innerHTML = `<span class="combo-count">${combo}x</span><span class="combo-text">COMBO!</span>`;
-    comboEl.style.left = x + 'px';
-    comboEl.style.top = y + 'px';
-    magicArea.appendChild(comboEl);
+    const el = document.createElement('div');
+    el.className = 'combo-popup';
+    el.innerHTML = `<span class="combo-count">${combo}x</span><span class="combo-text">COMBO!</span>`;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    magicArea.appendChild(el);
     playComboSound(combo);
-    setTimeout(() => comboEl.remove(), 1000);
+    setTimeout(() => el.remove(), 1000);
 }
 
 function updateCombo(x, y) {
     const now = Date.now();
     if (now - lastCatchTime < 1500) {
         comboCount++;
-        if (comboCount >= 3) {
-            showCombo(x, y, comboCount);
-            return comboCount;
-        }
-    } else {
-        comboCount = 1;
-    }
+        if (comboCount >= 3) { showCombo(x, y, comboCount); return comboCount; }
+    } else { comboCount = 1; }
     lastCatchTime = now;
     clearTimeout(comboTimeout);
-    comboTimeout = setTimeout(() => { comboCount = 0; }, 2000);
+    comboTimeout = setTimeout(() => comboCount = 0, 2000);
     return 1;
 }
 
-// STICKERS
+// Stickers
 function addSticker(item) {
     if (!stickerCollection[item.name]) {
         stickerCollection[item.name] = { count: 0, emoji: item.emoji, label: item.label };
@@ -224,48 +205,37 @@ function showNewSticker(item) {
     toast.innerHTML = `<span class="toast-new">✨</span> ${item.emoji} <span class="toast-label">${item.label}</span>`;
     document.body.appendChild(toast);
     const btn = document.getElementById('sticker-btn');
-    if (btn) {
-        btn.classList.add('new-sticker-glow');
-        setTimeout(() => btn.classList.remove('new-sticker-glow'), 2000);
-    }
+    if (btn) { btn.classList.add('new-sticker-glow'); setTimeout(() => btn.classList.remove('new-sticker-glow'), 2000); }
     setTimeout(() => toast.remove(), 2000);
 }
 
 function updateStickerCount() {
-    const count = Object.keys(stickerCollection).length;
     const el = document.getElementById('sticker-count');
-    if (el) el.textContent = count;
+    if (el) el.textContent = Object.keys(stickerCollection).length;
 }
 
 function showStickerAlbum() {
     const album = document.createElement('div');
     album.className = 'sticker-album';
     album.innerHTML = `
-        <div class="album-header">
-            <h2>📖 Sticker-Album</h2>
-            <button class="close-album">✕</button>
-        </div>
+        <div class="album-header"><h2>📖 Sticker-Album</h2><button class="close-album">✕</button></div>
         <div class="album-grid">
             ${unicornItems.map(item => {
-                const collected = stickerCollection[item.name];
-                return `
-                    <div class="album-sticker ${collected ? 'collected' : 'locked'}">
-                        <span class="sticker-emoji">${collected ? item.emoji : '❓'}</span>
-                        ${collected ? `<span class="sticker-count">×${collected.count}</span>` : ''}
-                    </div>
-                `;
+                const c = stickerCollection[item.name];
+                return `<div class="album-sticker ${c ? 'collected' : 'locked'}">
+                    <span class="sticker-emoji">${c ? item.emoji : '❓'}</span>
+                    ${c ? `<span class="sticker-count">×${c.count}</span>` : ''}
+                </div>`;
             }).join('')}
         </div>
-        <div class="album-footer">
-            ${Object.keys(stickerCollection).length} / ${unicornItems.length} gesammelt
-        </div>
+        <div class="album-footer">${Object.keys(stickerCollection).length} / ${unicornItems.length} gesammelt</div>
     `;
     document.body.appendChild(album);
     album.querySelector('.close-album').onclick = () => album.remove();
     album.onclick = (e) => { if (e.target === album) album.remove(); };
 }
 
-// BOSS
+// Boss
 let bossActive = false;
 let bossSpawnCounter = 0;
 
@@ -275,27 +245,21 @@ function spawnBoss() {
     
     const boss = document.createElement('div');
     boss.className = 'boss-unicorn';
-    boss.innerHTML = `
-        <div class="boss-health-bar"><div class="boss-health-fill"></div></div>
-        <div class="boss-emoji">🦄</div>
-    `;
+    boss.innerHTML = `<div class="boss-health-bar"><div class="boss-health-fill"></div></div><div class="boss-emoji">🦄</div>`;
     
     let health = 5;
-    const maxHealth = 5;
     let posX = Math.random() * (window.innerWidth - 200) + 100;
     let posY = Math.random() * (window.innerHeight - 300) + 100;
     let velX = (Math.random() - 0.5) * 3;
     let velY = (Math.random() - 0.5) * 3;
     
-    boss.style.left = posX + 'px';
-    boss.style.top = posY + 'px';
+    boss.style.left = posX + 'px'; boss.style.top = posY + 'px';
     boss._itemData = { name: 'boss', emoji: '👑🦄', points: 20, label: 'Boss-Einhorn' };
     
     const hitBoss = (e) => {
-        if (e) e.preventDefault();
-        if (e) e.stopPropagation();
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         health--;
-        boss.querySelector('.boss-health-fill').style.width = (health / maxHealth * 100) + '%';
+        boss.querySelector('.boss-health-fill').style.width = (health / 5 * 100) + '%';
         playBossHit();
         boss.classList.add('boss-hit');
         setTimeout(() => boss.classList.remove('boss-hit'), 200);
@@ -306,19 +270,16 @@ function spawnBoss() {
     boss.addEventListener('click', hitBoss);
     boss.addEventListener('touchstart', hitBoss, { passive: false });
     boss._hit = hitBoss;
-    
     magicArea.appendChild(boss);
     
-    const moveInterval = setInterval(() => {
-        if (!document.contains(boss)) { clearInterval(moveInterval); return; }
-        posX += velX;
-        posY += velY;
+    const moveInt = setInterval(() => {
+        if (!document.contains(boss)) { clearInterval(moveInt); return; }
+        posX += velX; posY += velY;
         if (posX < 0 || posX > window.innerWidth - 150) velX *= -1;
         if (posY < 50 || posY > window.innerHeight - 200) velY *= -1;
         posX = Math.max(0, Math.min(window.innerWidth - 150, posX));
         posY = Math.max(50, Math.min(window.innerHeight - 200, posY));
-        boss.style.left = posX + 'px';
-        boss.style.top = posY + 'px';
+        boss.style.left = posX + 'px'; boss.style.top = posY + 'px';
     }, 50);
     
     setTimeout(() => {
@@ -344,39 +305,30 @@ function defeatBoss(boss, x, y) {
     setTimeout(() => { boss.remove(); bossActive = false; }, 1000);
 }
 
-// MAIN ITEM
+// Main item
 function catchItem(element, item) {
     if (element.classList.contains('caught')) return;
-    
     const rect = element.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
     
     element.classList.add('caught');
-    const multiplier = updateCombo(x, y);
+    const mult = updateCombo(x, y);
     
-    if (item.name === 'unicorn') {
-        playUnicornSound();
-        createSparkles(x, y, 12);
-        createRainbowTrail(x, y);
-    } else {
-        playMagicPop();
-        createSparkles(x, y, 5);
-    }
+    if (item.name === 'unicorn') { playUnicornSound(); createSparkles(x, y, 12); createRainbowTrail(x, y); }
+    else { playMagicPop(); createSparkles(x, y, 5); }
     
     addSticker(item);
-    const earnedPoints = item.points * multiplier;
-    points += earnedPoints;
+    const earned = item.points * mult;
+    points += earned;
     pointsDisplay.textContent = points;
     
-    if (multiplier > 1) {
-        const popup = document.createElement('div');
-        popup.className = 'points-popup';
-        popup.textContent = `+${earnedPoints}`;
-        popup.style.left = x + 'px';
-        popup.style.top = y + 'px';
-        magicArea.appendChild(popup);
-        setTimeout(() => popup.remove(), 800);
+    if (mult > 1) {
+        const p = document.createElement('div');
+        p.className = 'points-popup'; p.textContent = `+${earned}`;
+        p.style.left = x + 'px'; p.style.top = y + 'px';
+        magicArea.appendChild(p);
+        setTimeout(() => p.remove(), 800);
     }
     
     if (points % 10 === 0) celebrateUnicorn();
@@ -391,59 +343,51 @@ function catchItem(element, item) {
 }
 
 function createMagicItem() {
+    if (!gameStarted) return;
+    
     let item;
     const rand = Math.random();
     if (rand < 0.10) item = unicornItems.find(i => i.name === 'unicorn');
     else if (rand < 0.18) item = unicornItems.find(i => i.name === 'rainbow');
     else item = unicornItems[Math.floor(Math.random() * unicornItems.length)];
     
-    const element = document.createElement('div');
-    element.className = 'magic-item';
-    if (item.name === 'unicorn') element.classList.add('unicorn-special');
-    if (item.name === 'rainbow') element.classList.add('rainbow-special');
+    const el = document.createElement('div');
+    el.className = 'magic-item';
+    if (item.name === 'unicorn') el.classList.add('unicorn-special');
+    if (item.name === 'rainbow') el.classList.add('rainbow-special');
     
-    const baseSize = item.size + Math.random() * 25;
-    element.style.width = baseSize + 'px';
-    element.style.height = baseSize + 'px';
-    element.style.left = Math.random() * (window.innerWidth - baseSize) + 'px';
-    element.style.background = magicColors[Math.floor(Math.random() * magicColors.length)];
-    element.style.animationDuration = (8 + Math.random() * 4) + 's';
+    const size = item.size + Math.random() * 25;
+    el.style.width = size + 'px'; el.style.height = size + 'px';
+    el.style.left = Math.random() * (window.innerWidth - size) + 'px';
+    el.style.background = magicColors[Math.floor(Math.random() * magicColors.length)];
+    el.style.animationDuration = (8 + Math.random() * 4) + 's';
     
     const emoji = document.createElement('span');
     emoji.className = 'emoji';
     emoji.textContent = item.emoji;
-    emoji.style.fontSize = (baseSize * 0.6) + 'px';
-    element.appendChild(emoji);
+    emoji.style.fontSize = (size * 0.6) + 'px';
+    el.appendChild(emoji);
     
-    element._itemData = item;
+    el._itemData = item;
     
-    const handleCatch = (e) => { 
-        e.preventDefault(); 
-        e.stopPropagation();
-        catchItem(element, item); 
-    };
-    element.addEventListener('click', handleCatch);
-    element.addEventListener('touchstart', handleCatch, { passive: false });
+    const handle = (e) => { e.preventDefault(); e.stopPropagation(); catchItem(el, item); };
+    el.addEventListener('click', handle);
+    el.addEventListener('touchstart', handle, { passive: false });
     
-    magicArea.appendChild(element);
-    setTimeout(() => { if (!element.classList.contains('caught')) element.remove(); }, 12000);
+    magicArea.appendChild(el);
+    setTimeout(() => { if (!el.classList.contains('caught')) el.remove(); }, 12000);
 }
 
 function celebrateUnicorn() {
     playUnicornSound();
-    const unicorn = document.getElementById('unicorn');
-    if (unicorn) {
-        unicorn.classList.add('celebrating');
-        setTimeout(() => unicorn.classList.remove('celebrating'), 1000);
-    }
+    const u = document.getElementById('unicorn');
+    if (u) { u.classList.add('celebrating'); setTimeout(() => u.classList.remove('celebrating'), 1000); }
     for (let i = 0; i < 5; i++) {
-        setTimeout(() => {
-            createSparkles(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.7, 8);
-        }, i * 150);
+        setTimeout(() => createSparkles(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.7, 8), i * 150);
     }
 }
 
-// HAND TRACKING (desktop only)
+// Hand tracking (camera mode)
 function checkHandCollisions() {
     if (!cameraActive) return;
     const items = document.querySelectorAll('.magic-item:not(.caught)');
@@ -453,72 +397,58 @@ function checkHandCollisions() {
         const pos = handPositions[hand];
         if (!pos) return;
         
-        items.forEach(element => {
-            const rect = element.getBoundingClientRect();
-            const distance = Math.sqrt(
-                Math.pow(pos.x - (rect.left + rect.width/2), 2) + 
-                Math.pow(pos.y - (rect.top + rect.height/2), 2)
-            );
-            if (distance < (rect.width/2 + 40)) {
-                const handEl = hand === 'left' ? handLeft : handRight;
-                if (handEl) {
-                    handEl.classList.add('grabbing');
-                    setTimeout(() => handEl.classList.remove('grabbing'), 200);
-                }
-                catchItem(element, element._itemData);
+        items.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            const dist = Math.sqrt(Math.pow(pos.x - (rect.left + rect.width/2), 2) + Math.pow(pos.y - (rect.top + rect.height/2), 2));
+            if (dist < (rect.width/2 + 40)) {
+                const h = hand === 'left' ? handLeft : handRight;
+                if (h) { h.classList.add('grabbing'); setTimeout(() => h.classList.remove('grabbing'), 200); }
+                catchItem(el, el._itemData);
             }
         });
         
         if (boss && boss._hit) {
             const rect = boss.getBoundingClientRect();
-            const distance = Math.sqrt(
-                Math.pow(pos.x - (rect.left + rect.width/2), 2) + 
-                Math.pow(pos.y - (rect.top + rect.height/2), 2)
-            );
-            if (distance < 100) boss._hit();
+            const dist = Math.sqrt(Math.pow(pos.x - (rect.left + rect.width/2), 2) + Math.pow(pos.y - (rect.top + rect.height/2), 2));
+            if (dist < 100) boss._hit();
         }
     });
 }
 
-async function startHandTracking() {
-    if (typeof Hands === 'undefined' || typeof Camera === 'undefined') {
-        alert('Kamera-Modus nicht verfügbar. Touch funktioniert! 📱');
+async function startCameraMode() {
+    // Load MediaPipe dynamically
+    try {
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+    } catch(e) {
+        alert('Kamera-Bibliotheken konnten nicht geladen werden. Bitte Touch/Klick-Modus verwenden.');
+        startTouchMode();
         return;
     }
     
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'user', width: 640, height: 480 } 
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
         webcamElement.srcObject = stream;
         webcamElement.classList.add('active');
-        if (startCameraBtn) startCameraBtn.classList.add('hidden');
         
-        const hands = new Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
+        const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
         hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         
         hands.onResults((results) => {
-            handPositions.left = null;
-            handPositions.right = null;
+            handPositions.left = null; handPositions.right = null;
             if (handLeft) handLeft.classList.remove('active');
             if (handRight) handRight.classList.remove('active');
             
             if (results.multiHandLandmarks && results.multiHandedness) {
                 results.multiHandLandmarks.forEach((landmarks, idx) => {
-                    const handedness = results.multiHandedness[idx].label;
-                    const indexTip = landmarks[8];
-                    const x = (1 - indexTip.x) * window.innerWidth;
-                    const y = indexTip.y * window.innerHeight;
-                    const hand = handedness === 'Left' ? 'right' : 'left';
+                    const lr = results.multiHandedness[idx].label;
+                    const tip = landmarks[8];
+                    const x = (1 - tip.x) * window.innerWidth;
+                    const y = tip.y * window.innerHeight;
+                    const hand = lr === 'Left' ? 'right' : 'left';
                     handPositions[hand] = { x, y };
-                    const handEl = hand === 'left' ? handLeft : handRight;
-                    if (handEl) {
-                        handEl.classList.add('active');
-                        handEl.style.left = (x - 40) + 'px';
-                        handEl.style.top = (y - 40) + 'px';
-                    }
+                    const h = hand === 'left' ? handLeft : handRight;
+                    if (h) { h.classList.add('active'); h.style.left = (x - 40) + 'px'; h.style.top = (y - 40) + 'px'; }
                 });
             }
             checkHandCollisions();
@@ -530,37 +460,63 @@ async function startHandTracking() {
         });
         camera.start();
         cameraActive = true;
+        startGame();
     } catch (err) {
         console.error('Camera error:', err);
-        alert('Kamera nicht verfügbar. Touch funktioniert! 📱');
+        alert('Kamera nicht verfügbar. Bitte Touch/Klick-Modus verwenden.');
+        startTouchMode();
     }
 }
 
-// INIT
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+function startTouchMode() {
+    if (modeSelector) modeSelector.classList.remove('show');
+    startGame();
+}
+
+function startGame() {
+    if (gameStarted) return;
+    gameStarted = true;
+    if (modeSelector) modeSelector.classList.remove('show');
+    createMagicItem();
+    setInterval(createMagicItem, 1500);
+    console.log('🦄 Spiel gestartet!');
+}
+
+// Init
 function init() {
     updateStickerCount();
     
-    // Sticker button
     const stickerBtn = document.getElementById('sticker-btn');
     if (stickerBtn) stickerBtn.addEventListener('click', showStickerAlbum);
     
-    // Camera button (desktop only)
-    if (startCameraBtn) {
-        if (window.isDesktop) {
-            startCameraBtn.addEventListener('click', startHandTracking);
+    if (isMobile) {
+        // Mobile: Start immediately with touch
+        startGame();
+    } else {
+        // Desktop: Show mode selector
+        if (modeSelector) {
+            modeSelector.classList.add('show');
+            document.getElementById('mode-touch')?.addEventListener('click', startTouchMode);
+            document.getElementById('mode-camera')?.addEventListener('click', () => {
+                modeSelector.classList.remove('show');
+                startCameraMode();
+            });
         } else {
-            startCameraBtn.style.display = 'none';
+            startGame();
         }
     }
-    
-    // Start game!
-    createMagicItem();
-    setInterval(createMagicItem, 1500);
-    
-    console.log('🦄 Emis Einhorn-Spiel gestartet!');
 }
 
-// Start when DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {

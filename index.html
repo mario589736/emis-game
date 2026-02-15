@@ -15,31 +15,19 @@
         <div id="unicorn">🦄</div>
         <div id="magic-area"></div>
         
-        <!-- Camera stuff - only shown on desktop -->
+        <!-- Camera elements (hidden by default) -->
         <video id="webcam" autoplay playsinline></video>
         <div id="hand-left" class="hand-cursor">🖐️</div>
         <div id="hand-right" class="hand-cursor">🖐️</div>
-        <button id="start-camera">📷 Kamera</button>
+        
+        <!-- Mode selector (desktop only) -->
+        <div id="mode-selector">
+            <p>Wie möchtest du spielen?</p>
+            <button id="mode-touch">👆 Tippen / Klicken</button>
+            <button id="mode-camera">📷 Mit Kamera</button>
+        </div>
     </div>
     
-    <!-- Load MediaPipe only if needed, don't block game -->
-    <script>
-        // Detect if desktop (camera makes sense)
-        window.isDesktop = window.innerWidth > 768 && !('ontouchstart' in window && navigator.maxTouchPoints > 1);
-        
-        if (window.isDesktop) {
-            // Load MediaPipe scripts dynamically
-            const script1 = document.createElement('script');
-            script1.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js';
-            script1.crossOrigin = 'anonymous';
-            document.head.appendChild(script1);
-            
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js';
-            script2.crossOrigin = 'anonymous';
-            document.head.appendChild(script2);
-        }
-    </script>
     <script src="game.js"></script>
 </body>
 </html>
