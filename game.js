@@ -47,8 +47,10 @@ const colorGroups = {
     pink: { name: 'Pink', items: ['🌸', '🎀', '💗', '🧁', '🦩'] },
 };
 
-// Boss unicorn
-const bossItem = { emoji: '🦄', name: 'Boss-Einhorn', points: 20, hits: 5, isBoss: true };
+// Magic unicorn (streicheln!)
+let magicUnicornActive = false;
+let magicUnicornEnergy = 0;
+const MAGIC_UNICORN_MAX_ENERGY = 100;
 
 // === STATE ===
 let score = 0;
@@ -131,12 +133,13 @@ function playCombo() {
     [523, 659, 784].forEach((f, i) => setTimeout(() => playTone(f, 0.1), i * 80));
 }
 
-function playBossHit() {
-    playTone(300, 0.15);
+function playPetSound() {
+    // Gentle ascending tone when petting
+    playTone(400 + magicUnicornEnergy * 3, 0.1);
 }
 
-function playBossDefeat() {
-    [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, 0.12), i * 100));
+function playUnicornHappy() {
+    [440, 554, 659, 880, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.12), i * 80));
 }
 
 function playCelebration() {
@@ -286,41 +289,28 @@ function createItem() {
         const items = getItemsForMode();
         item = items[Math.floor(Math.random() * items.length)];
     } else {
-        // Explore mode: all items including boss
-        const isBoss = Math.random() < 0.08 && !document.querySelector('.boss');
-        if (isBoss) {
-            item = { ...bossItem };
-        } else {
-            const items = [...allItems, ...animalItems.slice(0, 4)];
-            item = items[Math.floor(Math.random() * items.length)];
-        }
+        // Explore mode: all items (magic unicorn handled separately)
+        const items = [...allItems, ...animalItems.slice(0, 4)];
+        item = items[Math.floor(Math.random() * items.length)];
     }
     
     const el = document.createElement('div');
-    el.className = 'magic-item' + (item.isBoss ? ' boss' : '');
+    el.className = 'magic-item';
     
     // Extra large for kids!
-    const size = item.isBoss ? 130 : (85 + Math.random() * 25);
+    const size = 85 + Math.random() * 25;
     el.style.width = size + 'px';
     el.style.height = size + 'px';
     el.style.left = (20 + Math.random() * (window.innerWidth - size - 40)) + 'px';
     
     // Slower fall for young kids
-    el.style.animationDuration = (item.isBoss ? 18 : 12 + Math.random() * 4) + 's';
+    el.style.animationDuration = (12 + Math.random() * 4) + 's';
     
     const emoji = document.createElement('span');
     emoji.className = 'emoji';
     emoji.textContent = item.emoji;
     emoji.style.fontSize = (size * 0.55) + 'px';
     el.appendChild(emoji);
-    
-    if (item.isBoss) {
-        const hp = document.createElement('div');
-        hp.className = 'boss-hp';
-        hp.innerHTML = '❤️'.repeat(item.hits);
-        el.appendChild(hp);
-        el._hitsLeft = item.hits;
-    }
     
     el._item = item;
     
@@ -350,27 +340,6 @@ function catchItem(el) {
     const rect = el.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-    
-    // Boss handling
-    if (item.isBoss) {
-        el._hitsLeft--;
-        playBossHit();
-        el.querySelector('.boss-hp').innerHTML = '❤️'.repeat(el._hitsLeft);
-        el.classList.add('hit');
-        setTimeout(() => el.classList.remove('hit'), 200);
-        
-        if (el._hitsLeft <= 0) {
-            el.classList.add('caught');
-            createSparkles(x, y, 15);
-            playBossDefeat();
-            score += item.points;
-            pointsDisplay.textContent = score;
-            showPoints(x, y, item.points, true);
-            showCelebration('Boss besiegt!', '🦄');
-            setTimeout(() => el.remove(), 500);
-        }
-        return;
-    }
     
     // Mode-specific handling
     if (currentMode === 'colors') {
@@ -463,9 +432,15 @@ function showAnimalName(x, y, name) {
 // === CAMERA / HAND TRACKING ===
 let hands = null;
 let camera = null;
+let cameraInitialized = false;
 
 async function startCamera() {
-    if (hands) return;
+    // If already initialized, just show the video
+    if (cameraInitialized) {
+        video.classList.add('active');
+        handCursor.classList.add('active');
+        return;
+    }
     
     try {
         hands = new Hands({
@@ -492,6 +467,7 @@ async function startCamera() {
         });
         
         await camera.start();
+        cameraInitialized = true;
         video.classList.add('active');
         handCursor.classList.add('active');
         
@@ -526,6 +502,121 @@ function onHandResults(results) {
             catchItem(el);
         }
     });
+}
+
+// === MAGIC UNICORN (flies across, needs petting!) ===
+let magicUnicornTimeout = null;
+
+function spawnMagicUnicorn() {
+    if (magicUnicornActive || !gameActive) return;
+    
+    magicUnicornActive = true;
+    magicUnicornEnergy = 0;
+    
+    const unicorn = document.createElement('div');
+    unicorn.id = 'magic-unicorn';
+    unicorn.innerHTML = `
+        <div class="mu-emoji">🦄</div>
+        <div class="mu-energy-bar">
+            <div class="mu-energy-fill"></div>
+        </div>
+        <div class="mu-hint">Streichle mich! 💜</div>
+    `;
+    
+    magicArea.appendChild(unicorn);
+    
+    // Pet/stroke handler
+    const petUnicorn = (e) => {
+        e.preventDefault();
+        if (!magicUnicornActive) return;
+        
+        magicUnicornEnergy += 8;
+        playPetSound();
+        createSparkles(
+            unicorn.getBoundingClientRect().left + 60,
+            unicorn.getBoundingClientRect().top + 60,
+            3
+        );
+        
+        // Update energy bar
+        unicorn.querySelector('.mu-energy-fill').style.width = magicUnicornEnergy + '%';
+        
+        // Unicorn gets happier
+        if (magicUnicornEnergy >= 100) {
+            magicUnicornHappy(unicorn);
+        }
+    };
+    
+    unicorn.addEventListener('click', petUnicorn);
+    unicorn.addEventListener('touchstart', petUnicorn, { passive: false });
+    
+    // Also check for camera hand collision
+    if (useCamera) {
+        const checkHandCollision = setInterval(() => {
+            if (!magicUnicornActive) {
+                clearInterval(checkHandCollision);
+                return;
+            }
+            const rect = unicorn.getBoundingClientRect();
+            if (handX > rect.left && handX < rect.right &&
+                handY > rect.top && handY < rect.bottom) {
+                magicUnicornEnergy += 2;
+                unicorn.querySelector('.mu-energy-fill').style.width = magicUnicornEnergy + '%';
+                if (magicUnicornEnergy % 10 < 3) {
+                    playPetSound();
+                    createSparkles(handX, handY, 2);
+                }
+                if (magicUnicornEnergy >= 100) {
+                    clearInterval(checkHandCollision);
+                    magicUnicornHappy(unicorn);
+                }
+            }
+        }, 100);
+    }
+    
+    // Unicorn leaves after 15 seconds if not fully petted
+    setTimeout(() => {
+        if (magicUnicornActive && magicUnicornEnergy < 100) {
+            unicorn.classList.add('leaving');
+            setTimeout(() => {
+                unicorn.remove();
+                magicUnicornActive = false;
+                scheduleMagicUnicorn();
+            }, 1000);
+        }
+    }, 15000);
+}
+
+function magicUnicornHappy(unicorn) {
+    magicUnicornActive = false;
+    
+    unicorn.classList.add('happy');
+    playUnicornHappy();
+    
+    // Big celebration!
+    score += 25;
+    pointsDisplay.textContent = score;
+    showCelebration('Einhorn glücklich!', '🦄💜');
+    
+    // Add unicorn sticker
+    if (!stickers.has('🦄💜')) {
+        stickers.add('🦄💜');
+        try { localStorage.setItem('emiStickers', JSON.stringify([...stickers])); } catch(e) {}
+        showStickerToast('🦄💜');
+    }
+    
+    setTimeout(() => {
+        unicorn.remove();
+        scheduleMagicUnicorn();
+    }, 2000);
+}
+
+function scheduleMagicUnicorn() {
+    if (magicUnicornTimeout) clearTimeout(magicUnicornTimeout);
+    // Spawn every 30-60 seconds in explore mode
+    if (currentMode === 'explore' && gameActive) {
+        magicUnicornTimeout = setTimeout(spawnMagicUnicorn, 30000 + Math.random() * 30000);
+    }
 }
 
 // === GAME CONTROL ===
@@ -575,6 +666,11 @@ function startGame() {
     // Start spawning items
     createItem();
     itemInterval = setInterval(createItem, currentMode === 'counting' ? 1800 : 2200);
+    
+    // Schedule magic unicorn in explore mode
+    if (currentMode === 'explore') {
+        scheduleMagicUnicorn();
+    }
 }
 
 function stopGame() {
@@ -583,8 +679,13 @@ function stopGame() {
         clearInterval(itemInterval);
         itemInterval = null;
     }
+    if (magicUnicornTimeout) {
+        clearTimeout(magicUnicornTimeout);
+        magicUnicornTimeout = null;
+    }
+    magicUnicornActive = false;
     
-    magicArea.querySelectorAll('.magic-item, .confetti, .animal-name-bubble').forEach(el => el.remove());
+    magicArea.querySelectorAll('.magic-item, .confetti, .animal-name-bubble, #magic-unicorn').forEach(el => el.remove());
     
     gameScreen.classList.remove('active');
     startScreen.classList.add('active');
