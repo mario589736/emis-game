@@ -73,6 +73,75 @@ body {
     left: 0;
 }
 
+/* Webcam - mirrored and semi-transparent in corner */
+#webcam {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 160px;
+    height: 120px;
+    border-radius: 15px;
+    border: 3px solid rgba(255,255,255,0.5);
+    transform: scaleX(-1);
+    z-index: 50;
+    opacity: 0.8;
+    display: none;
+}
+
+#webcam.active {
+    display: block;
+}
+
+#hand-canvas {
+    display: none;
+}
+
+/* Hand cursors */
+.hand-cursor {
+    position: absolute;
+    font-size: 4rem;
+    pointer-events: none;
+    z-index: 200;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    transition: transform 0.05s ease-out;
+    display: none;
+}
+
+.hand-cursor.active {
+    display: block;
+}
+
+.hand-cursor.grabbing {
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 20px rgba(255,255,0,0.8));
+}
+
+/* Start camera button */
+#start-camera {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    z-index: 150;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-family: inherit;
+}
+
+#start-camera:hover {
+    transform: translateX(-50%) scale(1.05);
+}
+
+#start-camera.hidden {
+    display: none;
+}
+
 .magic-item {
     position: absolute;
     border-radius: 50%;
@@ -109,7 +178,6 @@ body {
     filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2));
 }
 
-/* SLOWER float animation */
 @keyframes float-up {
     0% {
         transform: translateY(110vh) scale(0.5);
