@@ -23,7 +23,7 @@
 - [x] Album-Ansicht mit Namen
 - [x] Toast-Benachrichtigung (nicht störend)
 - [x] Combo-System (3+ schnelle Fänge = Multiplikator)
-- [x] Boss-Einhorn (5 Treffer, 20 Punkte)
+- [x] Magic-Einhorn (streicheln mit Energie-Balken, 25 Punkte)
 
 ## ✅ Phase 3: Kamera-Steuerung (DONE)
 - [x] MediaPipe Hand-Tracking
@@ -31,6 +31,7 @@
 - [x] **Kleine Kamera-Vorschau** (140x105px in der Ecke)
 - [x] Hand-Cursor (✨) zeigt Position mit größerer Hitbox
 - [x] Kamera-Feed NICHT fullscreen
+- [x] Kamera bleibt aktiv nach Mode-Wechsel (Bug fixed 2026-02-15)
 
 ## ✅ Phase 4: Spielmodi (DONE)
 - [x] **Modus-Auswahl** auf Startscreen (2x2 Grid)
