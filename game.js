@@ -1,4 +1,5 @@
-// 🦄 Emis Einhorn-Spiel - mit Stickern, Boss & Combos! 🖐️
+// 🦄 Emis Einhorn-Spiel 🦄
+// Works on mobile AND desktop!
 
 const magicArea = document.getElementById('magic-area');
 const pointsDisplay = document.getElementById('points');
@@ -16,8 +17,11 @@ let lastCatchTime = 0;
 let comboCount = 0;
 let comboTimeout = null;
 
-// Sticker collection (saved in localStorage)
-let stickerCollection = JSON.parse(localStorage.getItem('emiStickers') || '{}');
+// Sticker collection
+let stickerCollection = {};
+try {
+    stickerCollection = JSON.parse(localStorage.getItem('emiStickers') || '{}');
+} catch(e) { stickerCollection = {}; }
 
 // Items
 const unicornItems = [
@@ -49,87 +53,105 @@ const magicColors = [
     'radial-gradient(circle, rgba(230,230,250,0.8) 0%, rgba(200,162,200,0.4) 100%)',
 ];
 
-// Audio
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// Audio - with error handling
+let audioContext;
+try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+} catch(e) { console.log('Audio not supported'); }
 
 function playMagicPop() {
-    if (audioContext.state === 'suspended') audioContext.resume();
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(600, audioContext.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1400, audioContext.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.25, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
-    osc.start(audioContext.currentTime);
-    osc.stop(audioContext.currentTime + 0.25);
+    if (!audioContext) return;
+    try {
+        if (audioContext.state === 'suspended') audioContext.resume();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1400, audioContext.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.25, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+        osc.start(audioContext.currentTime);
+        osc.stop(audioContext.currentTime + 0.25);
+    } catch(e) {}
 }
 
 function playUnicornSound() {
-    if (audioContext.state === 'suspended') audioContext.resume();
-    [523, 659, 784, 1047].forEach((freq, i) => {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.05);
-        gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5 + i * 0.05);
-        osc.start(audioContext.currentTime + i * 0.05);
-        osc.stop(audioContext.currentTime + 0.5 + i * 0.05);
-    });
+    if (!audioContext) return;
+    try {
+        if (audioContext.state === 'suspended') audioContext.resume();
+        [523, 659, 784, 1047].forEach((freq, i) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.05);
+            gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5 + i * 0.05);
+            osc.start(audioContext.currentTime + i * 0.05);
+            osc.stop(audioContext.currentTime + 0.5 + i * 0.05);
+        });
+    } catch(e) {}
 }
 
 function playComboSound(comboLevel) {
-    if (audioContext.state === 'suspended') audioContext.resume();
-    const baseFreq = 400 + (comboLevel * 100);
-    for (let i = 0; i < 3; i++) {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(baseFreq + i * 150, audioContext.currentTime + i * 0.05);
-        gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2 + i * 0.05);
-        osc.start(audioContext.currentTime + i * 0.05);
-        osc.stop(audioContext.currentTime + 0.2 + i * 0.05);
-    }
+    if (!audioContext) return;
+    try {
+        if (audioContext.state === 'suspended') audioContext.resume();
+        const baseFreq = 400 + (comboLevel * 100);
+        for (let i = 0; i < 3; i++) {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(baseFreq + i * 150, audioContext.currentTime + i * 0.05);
+            gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2 + i * 0.05);
+            osc.start(audioContext.currentTime + i * 0.05);
+            osc.stop(audioContext.currentTime + 0.2 + i * 0.05);
+        }
+    } catch(e) {}
 }
 
 function playBossHit() {
-    if (audioContext.state === 'suspended') audioContext.resume();
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(200, audioContext.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-    osc.start(audioContext.currentTime);
-    osc.stop(audioContext.currentTime + 0.2);
-}
-
-function playBossDefeat() {
-    if (audioContext.state === 'suspended') audioContext.resume();
-    const notes = [523, 659, 784, 880, 1047, 1319, 1568];
-    notes.forEach((freq, i) => {
+    if (!audioContext) return;
+    try {
+        if (audioContext.state === 'suspended') audioContext.resume();
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
         osc.connect(gain);
         gain.connect(audioContext.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.08);
-        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.08);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5 + i * 0.08);
-        osc.start(audioContext.currentTime + i * 0.08);
-        osc.stop(audioContext.currentTime + 0.5 + i * 0.08);
-    });
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        osc.start(audioContext.currentTime);
+        osc.stop(audioContext.currentTime + 0.2);
+    } catch(e) {}
+}
+
+function playBossDefeat() {
+    if (!audioContext) return;
+    try {
+        if (audioContext.state === 'suspended') audioContext.resume();
+        const notes = [523, 659, 784, 880, 1047, 1319, 1568];
+        notes.forEach((freq, i) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.08);
+            gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5 + i * 0.08);
+            osc.start(audioContext.currentTime + i * 0.08);
+            osc.stop(audioContext.currentTime + 0.5 + i * 0.08);
+        });
+    } catch(e) {}
 }
 
 function createSparkles(x, y, count = 6) {
@@ -156,7 +178,7 @@ function createRainbowTrail(x, y) {
     setTimeout(() => trail.remove(), 800);
 }
 
-// ========== COMBO SYSTEM ==========
+// COMBO
 function showCombo(x, y, combo) {
     const comboEl = document.createElement('div');
     comboEl.className = 'combo-popup';
@@ -174,53 +196,45 @@ function updateCombo(x, y) {
         comboCount++;
         if (comboCount >= 3) {
             showCombo(x, y, comboCount);
-            return comboCount; // Return multiplier
+            return comboCount;
         }
     } else {
         comboCount = 1;
     }
     lastCatchTime = now;
-    
     clearTimeout(comboTimeout);
     comboTimeout = setTimeout(() => { comboCount = 0; }, 2000);
-    
     return 1;
 }
 
-// ========== STICKER COLLECTION ==========
+// STICKERS
 function addSticker(item) {
     if (!stickerCollection[item.name]) {
         stickerCollection[item.name] = { count: 0, emoji: item.emoji, label: item.label };
         showNewSticker(item);
     }
     stickerCollection[item.name].count++;
-    localStorage.setItem('emiStickers', JSON.stringify(stickerCollection));
+    try { localStorage.setItem('emiStickers', JSON.stringify(stickerCollection)); } catch(e) {}
     updateStickerCount();
 }
 
 function showNewSticker(item) {
-    // Subtle toast instead of big popup
     const toast = document.createElement('div');
     toast.className = 'sticker-toast';
-    toast.innerHTML = \`<span class="toast-new">✨</span> \${item.emoji} <span class="toast-label">\${item.label}</span>\`;
+    toast.innerHTML = `<span class="toast-new">✨</span> ${item.emoji} <span class="toast-label">${item.label}</span>`;
     document.body.appendChild(toast);
-    
-    // Brief sparkle on sticker button
     const btn = document.getElementById('sticker-btn');
-    btn.classList.add('new-sticker-glow');
-    setTimeout(() => btn.classList.remove('new-sticker-glow'), 2000);
-    
+    if (btn) {
+        btn.classList.add('new-sticker-glow');
+        setTimeout(() => btn.classList.remove('new-sticker-glow'), 2000);
+    }
     setTimeout(() => toast.remove(), 2000);
-}</div>
-    `;
-    document.body.appendChild(popup);
-    playUnicornSound();
-    setTimeout(() => popup.remove(), 2500);
 }
 
 function updateStickerCount() {
     const count = Object.keys(stickerCollection).length;
-    document.getElementById('sticker-count').textContent = count;
+    const el = document.getElementById('sticker-count');
+    if (el) el.textContent = count;
 }
 
 function showStickerAlbum() {
@@ -228,7 +242,7 @@ function showStickerAlbum() {
     album.className = 'sticker-album';
     album.innerHTML = `
         <div class="album-header">
-            <h2>📖 Emis Sticker-Album</h2>
+            <h2>📖 Sticker-Album</h2>
             <button class="close-album">✕</button>
         </div>
         <div class="album-grid">
@@ -248,9 +262,10 @@ function showStickerAlbum() {
     `;
     document.body.appendChild(album);
     album.querySelector('.close-album').onclick = () => album.remove();
+    album.onclick = (e) => { if (e.target === album) album.remove(); };
 }
 
-// ========== BOSS UNICORN ==========
+// BOSS
 let bossActive = false;
 let bossSpawnCounter = 0;
 
@@ -269,64 +284,47 @@ function spawnBoss() {
     const maxHealth = 5;
     let posX = Math.random() * (window.innerWidth - 200) + 100;
     let posY = Math.random() * (window.innerHeight - 300) + 100;
-    let velX = (Math.random() - 0.5) * 4;
-    let velY = (Math.random() - 0.5) * 4;
+    let velX = (Math.random() - 0.5) * 3;
+    let velY = (Math.random() - 0.5) * 3;
     
     boss.style.left = posX + 'px';
     boss.style.top = posY + 'px';
-    
-    boss._health = health;
-    boss._itemData = { name: 'boss', emoji: '🦄', points: 20, label: 'Boss-Einhorn' };
+    boss._itemData = { name: 'boss', emoji: '👑🦄', points: 20, label: 'Boss-Einhorn' };
     
     const hitBoss = (e) => {
         if (e) e.preventDefault();
+        if (e) e.stopPropagation();
         health--;
         boss.querySelector('.boss-health-fill').style.width = (health / maxHealth * 100) + '%';
         playBossHit();
         boss.classList.add('boss-hit');
         setTimeout(() => boss.classList.remove('boss-hit'), 200);
-        
         createSparkles(posX + 75, posY + 75, 4);
-        
-        if (health <= 0) {
-            defeatBoss(boss, posX + 75, posY + 75);
-        }
+        if (health <= 0) defeatBoss(boss, posX + 75, posY + 75);
     };
     
     boss.addEventListener('click', hitBoss);
-    boss.addEventListener('touchstart', hitBoss);
+    boss.addEventListener('touchstart', hitBoss, { passive: false });
     boss._hit = hitBoss;
     
     magicArea.appendChild(boss);
     
-    // Boss movement
     const moveInterval = setInterval(() => {
-        if (!document.contains(boss)) {
-            clearInterval(moveInterval);
-            return;
-        }
-        
+        if (!document.contains(boss)) { clearInterval(moveInterval); return; }
         posX += velX;
         posY += velY;
-        
         if (posX < 0 || posX > window.innerWidth - 150) velX *= -1;
-        if (posY < 0 || posY > window.innerHeight - 200) velY *= -1;
-        
+        if (posY < 50 || posY > window.innerHeight - 200) velY *= -1;
         posX = Math.max(0, Math.min(window.innerWidth - 150, posX));
-        posY = Math.max(0, Math.min(window.innerHeight - 200, posY));
-        
+        posY = Math.max(50, Math.min(window.innerHeight - 200, posY));
         boss.style.left = posX + 'px';
         boss.style.top = posY + 'px';
     }, 50);
     
-    // Boss escapes after 15 seconds
     setTimeout(() => {
         if (document.contains(boss) && health > 0) {
             boss.classList.add('boss-escape');
-            setTimeout(() => {
-                boss.remove();
-                bossActive = false;
-            }, 500);
+            setTimeout(() => { boss.remove(); bossActive = false; }, 500);
         }
     }, 15000);
 }
@@ -334,35 +332,19 @@ function spawnBoss() {
 function defeatBoss(boss, x, y) {
     playBossDefeat();
     boss.classList.add('boss-defeated');
-    
-    // Mega celebration!
     for (let i = 0; i < 8; i++) {
         setTimeout(() => {
-            createSparkles(
-                x + (Math.random() - 0.5) * 200,
-                y + (Math.random() - 0.5) * 200,
-                10
-            );
-            createRainbowTrail(
-                x + (Math.random() - 0.5) * 150,
-                y + (Math.random() - 0.5) * 150
-            );
+            createSparkles(x + (Math.random() - 0.5) * 200, y + (Math.random() - 0.5) * 200, 10);
+            createRainbowTrail(x + (Math.random() - 0.5) * 150, y + (Math.random() - 0.5) * 150);
         }, i * 100);
     }
-    
-    // Add boss sticker
     addSticker({ name: 'boss', emoji: '👑🦄', label: 'Boss-Einhorn' });
-    
     points += 20;
     pointsDisplay.textContent = points;
-    
-    setTimeout(() => {
-        boss.remove();
-        bossActive = false;
-    }, 1000);
+    setTimeout(() => { boss.remove(); bossActive = false; }, 1000);
 }
 
-// ========== MAIN ITEM CREATION ==========
+// MAIN ITEM
 function catchItem(element, item) {
     if (element.classList.contains('caught')) return;
     
@@ -371,8 +353,6 @@ function catchItem(element, item) {
     const y = rect.top + rect.height / 2;
     
     element.classList.add('caught');
-    
-    // Combo!
     const multiplier = updateCombo(x, y);
     
     if (item.name === 'unicorn') {
@@ -384,14 +364,11 @@ function catchItem(element, item) {
         createSparkles(x, y, 5);
     }
     
-    // Add sticker
     addSticker(item);
-    
     const earnedPoints = item.points * multiplier;
     points += earnedPoints;
     pointsDisplay.textContent = points;
     
-    // Show points popup
     if (multiplier > 1) {
         const popup = document.createElement('div');
         popup.className = 'points-popup';
@@ -404,7 +381,6 @@ function catchItem(element, item) {
     
     if (points % 10 === 0) celebrateUnicorn();
     
-    // Boss spawn chance
     bossSpawnCounter++;
     if (bossSpawnCounter >= 20 && Math.random() < 0.3 && !bossActive) {
         bossSpawnCounter = 0;
@@ -423,7 +399,6 @@ function createMagicItem() {
     
     const element = document.createElement('div');
     element.className = 'magic-item';
-    element.dataset.itemName = item.name;
     if (item.name === 'unicorn') element.classList.add('unicorn-special');
     if (item.name === 'rainbow') element.classList.add('rainbow-special');
     
@@ -442,9 +417,13 @@ function createMagicItem() {
     
     element._itemData = item;
     
-    const handleCatch = (e) => { e.preventDefault(); catchItem(element, item); };
+    const handleCatch = (e) => { 
+        e.preventDefault(); 
+        e.stopPropagation();
+        catchItem(element, item); 
+    };
     element.addEventListener('click', handleCatch);
-    element.addEventListener('touchstart', handleCatch);
+    element.addEventListener('touchstart', handleCatch, { passive: false });
     
     magicArea.appendChild(element);
     setTimeout(() => { if (!element.classList.contains('caught')) element.remove(); }, 12000);
@@ -453,8 +432,10 @@ function createMagicItem() {
 function celebrateUnicorn() {
     playUnicornSound();
     const unicorn = document.getElementById('unicorn');
-    unicorn.classList.add('celebrating');
-    setTimeout(() => unicorn.classList.remove('celebrating'), 1000);
+    if (unicorn) {
+        unicorn.classList.add('celebrating');
+        setTimeout(() => unicorn.classList.remove('celebrating'), 1000);
+    }
     for (let i = 0; i < 5; i++) {
         setTimeout(() => {
             createSparkles(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.7, 8);
@@ -462,10 +443,9 @@ function celebrateUnicorn() {
     }
 }
 
-// ========== HAND TRACKING ==========
+// HAND TRACKING (desktop only)
 function checkHandCollisions() {
     if (!cameraActive) return;
-    
     const items = document.querySelectorAll('.magic-item:not(.caught)');
     const boss = document.querySelector('.boss-unicorn:not(.boss-defeated)');
     
@@ -473,7 +453,6 @@ function checkHandCollisions() {
         const pos = handPositions[hand];
         if (!pos) return;
         
-        // Check regular items
         items.forEach(element => {
             const rect = element.getBoundingClientRect();
             const distance = Math.sqrt(
@@ -482,34 +461,38 @@ function checkHandCollisions() {
             );
             if (distance < (rect.width/2 + 40)) {
                 const handEl = hand === 'left' ? handLeft : handRight;
-                handEl.classList.add('grabbing');
-                setTimeout(() => handEl.classList.remove('grabbing'), 200);
+                if (handEl) {
+                    handEl.classList.add('grabbing');
+                    setTimeout(() => handEl.classList.remove('grabbing'), 200);
+                }
                 catchItem(element, element._itemData);
             }
         });
         
-        // Check boss
-        if (boss) {
+        if (boss && boss._hit) {
             const rect = boss.getBoundingClientRect();
             const distance = Math.sqrt(
                 Math.pow(pos.x - (rect.left + rect.width/2), 2) + 
                 Math.pow(pos.y - (rect.top + rect.height/2), 2)
             );
-            if (distance < 100) {
-                boss._hit();
-            }
+            if (distance < 100) boss._hit();
         }
     });
 }
 
 async function startHandTracking() {
+    if (typeof Hands === 'undefined' || typeof Camera === 'undefined') {
+        alert('Kamera-Modus nicht verfügbar. Touch funktioniert! 📱');
+        return;
+    }
+    
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: 'user', width: 640, height: 480 } 
         });
         webcamElement.srcObject = stream;
         webcamElement.classList.add('active');
-        startCameraBtn.classList.add('hidden');
+        if (startCameraBtn) startCameraBtn.classList.add('hidden');
         
         const hands = new Hands({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
@@ -519,8 +502,8 @@ async function startHandTracking() {
         hands.onResults((results) => {
             handPositions.left = null;
             handPositions.right = null;
-            handLeft.classList.remove('active');
-            handRight.classList.remove('active');
+            if (handLeft) handLeft.classList.remove('active');
+            if (handRight) handRight.classList.remove('active');
             
             if (results.multiHandLandmarks && results.multiHandedness) {
                 results.multiHandLandmarks.forEach((landmarks, idx) => {
@@ -531,9 +514,11 @@ async function startHandTracking() {
                     const hand = handedness === 'Left' ? 'right' : 'left';
                     handPositions[hand] = { x, y };
                     const handEl = hand === 'left' ? handLeft : handRight;
-                    handEl.classList.add('active');
-                    handEl.style.left = (x - 40) + 'px';
-                    handEl.style.top = (y - 40) + 'px';
+                    if (handEl) {
+                        handEl.classList.add('active');
+                        handEl.style.left = (x - 40) + 'px';
+                        handEl.style.top = (y - 40) + 'px';
+                    }
                 });
             }
             checkHandCollisions();
@@ -547,19 +532,37 @@ async function startHandTracking() {
         cameraActive = true;
     } catch (err) {
         console.error('Camera error:', err);
-        alert('Kamera konnte nicht gestartet werden. Touch funktioniert! 📱');
+        alert('Kamera nicht verfügbar. Touch funktioniert! 📱');
     }
 }
 
-// Event listeners
-startCameraBtn.addEventListener('click', startHandTracking);
-document.getElementById('sticker-btn').addEventListener('click', showStickerAlbum);
-
-// Start
-function startGame() {
+// INIT
+function init() {
     updateStickerCount();
+    
+    // Sticker button
+    const stickerBtn = document.getElementById('sticker-btn');
+    if (stickerBtn) stickerBtn.addEventListener('click', showStickerAlbum);
+    
+    // Camera button (desktop only)
+    if (startCameraBtn) {
+        if (window.isDesktop) {
+            startCameraBtn.addEventListener('click', startHandTracking);
+        } else {
+            startCameraBtn.style.display = 'none';
+        }
+    }
+    
+    // Start game!
     createMagicItem();
     setInterval(createMagicItem, 1500);
+    
+    console.log('🦄 Emis Einhorn-Spiel gestartet!');
 }
 
-window.addEventListener('load', startGame);
+// Start when DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

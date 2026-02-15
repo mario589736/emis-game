@@ -2,31 +2,44 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>🦄 Emis Einhorn-Spiel 🦄</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦄</text></svg>">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <div id="game">
         <div id="score">🦄 <span id="points">0</span></div>
-        
-        <!-- Sticker Button -->
         <button id="sticker-btn">📖 <span id="sticker-count">0</span></button>
         
         <div id="unicorn">🦄</div>
         <div id="magic-area"></div>
         
+        <!-- Camera stuff - only shown on desktop -->
         <video id="webcam" autoplay playsinline></video>
-        <canvas id="hand-canvas"></canvas>
-        
         <div id="hand-left" class="hand-cursor">🖐️</div>
         <div id="hand-right" class="hand-cursor">🖐️</div>
-        
-        <button id="start-camera">📷 Kamera starten!</button>
+        <button id="start-camera">📷 Kamera</button>
     </div>
+    
+    <!-- Load MediaPipe only if needed, don't block game -->
+    <script>
+        // Detect if desktop (camera makes sense)
+        window.isDesktop = window.innerWidth > 768 && !('ontouchstart' in window && navigator.maxTouchPoints > 1);
+        
+        if (window.isDesktop) {
+            // Load MediaPipe scripts dynamically
+            const script1 = document.createElement('script');
+            script1.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js';
+            script1.crossOrigin = 'anonymous';
+            document.head.appendChild(script1);
+            
+            const script2 = document.createElement('script');
+            script2.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js';
+            script2.crossOrigin = 'anonymous';
+            document.head.appendChild(script2);
+        }
+    </script>
     <script src="game.js"></script>
 </body>
 </html>
