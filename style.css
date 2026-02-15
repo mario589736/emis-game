@@ -305,35 +305,40 @@ body {
     100% { transform: translateY(-200px) scale(0.5); opacity: 0; }
 }
 
-/* NEW STICKER POPUP */
-.new-sticker-popup {
+/* STICKER TOAST (subtle) */
+.sticker-toast {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 30px 50px;
-    border-radius: 30px;
-    text-align: center;
+    top: 80px;
+    right: 20px;
+    background: rgba(255,255,255,0.95);
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 1.2rem;
     z-index: 500;
-    animation: sticker-reveal 2.5s ease-out forwards;
-    box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+    animation: toast-slide 2s ease-out forwards;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
-.new-sticker-badge {
-    background: #ff6b6b;
-    color: white;
-    padding: 5px 15px;
-    border-radius: 15px;
-    font-size: 1rem;
-    margin-bottom: 10px;
-    display: inline-block;
-}
-.new-sticker-emoji { font-size: 5rem; margin: 10px 0; }
-.new-sticker-label { font-size: 1.5rem; color: #333; }
+.toast-new { font-size: 1rem; }
+.toast-label { color: #666; font-size: 0.9rem; }
 
-@keyframes sticker-reveal {
-    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-    20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+@keyframes toast-slide {
+    0% { transform: translateX(100px); opacity: 0; }
+    15% { transform: translateX(0); opacity: 1; }
+    85% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(100px); opacity: 0; }
+}
+
+#sticker-btn.new-sticker-glow {
+    animation: btn-glow 0.5s ease-in-out 3;
+}
+
+@keyframes btn-glow {
+    0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    50% { box-shadow: 0 0 25px rgba(255,215,0,0.8), 0 0 50px rgba(255,215,0,0.4); }
+}
     30% { transform: translate(-50%, -50%) scale(1); }
     80% { opacity: 1; }
     100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }

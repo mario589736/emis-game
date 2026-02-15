@@ -199,12 +199,19 @@ function addSticker(item) {
 }
 
 function showNewSticker(item) {
-    const popup = document.createElement('div');
-    popup.className = 'new-sticker-popup';
-    popup.innerHTML = `
-        <div class="new-sticker-badge">NEU!</div>
-        <div class="new-sticker-emoji">${item.emoji}</div>
-        <div class="new-sticker-label">${item.label}</div>
+    // Subtle toast instead of big popup
+    const toast = document.createElement('div');
+    toast.className = 'sticker-toast';
+    toast.innerHTML = \`<span class="toast-new">✨</span> \${item.emoji} <span class="toast-label">\${item.label}</span>\`;
+    document.body.appendChild(toast);
+    
+    // Brief sparkle on sticker button
+    const btn = document.getElementById('sticker-btn');
+    btn.classList.add('new-sticker-glow');
+    setTimeout(() => btn.classList.remove('new-sticker-glow'), 2000);
+    
+    setTimeout(() => toast.remove(), 2000);
+}</div>
     `;
     document.body.appendChild(popup);
     playUnicornSound();
