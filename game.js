@@ -6,6 +6,12 @@ let points = 0;
 
 // Einhorn-themed items - BIGGER sizes for little fingers!
 const unicornItems = [
+    { emoji: '🍦', size: 75, points: 2, name: 'icecream' },
+    { emoji: '🐶', size: 80, points: 2, name: 'dog' },
+    { emoji: '🐱', size: 80, points: 2, name: 'cat' },
+    { emoji: '🐕', size: 75, points: 2, name: 'puppy' },
+    { emoji: '🐈', size: 75, points: 2, name: 'kitty' },
+    { emoji: '🍨', size: 70, points: 2, name: 'sundae' },
     { emoji: '🦄', size: 90, points: 3, name: 'unicorn' },
     { emoji: '🌈', size: 100, points: 2, name: 'rainbow' },
     { emoji: '☁️', size: 80, points: 1, name: 'cloud' },
